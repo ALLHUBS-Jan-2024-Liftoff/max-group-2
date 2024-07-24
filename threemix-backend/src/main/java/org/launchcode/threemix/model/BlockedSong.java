@@ -14,7 +14,6 @@ public class BlockedSong {
 
     private String title;
 
-    // Getters and setters
     public Long getId() {
         return id;
     }

@@ -17,7 +17,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<BlockedSong> blockedSongs;
 
-    // Getters and setters
     public Long getId() {
         return id;
     }

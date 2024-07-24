@@ -7,14 +7,16 @@ import org.launchcode.threemix.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,33 +29,43 @@ public class PlaylistExportController {
     @Autowired
     private UserService userService;
 
+    private static final Logger logger = Logger.getLogger(PlaylistExportController.class.getName());
+
     @GetMapping(value = "/generateTrackList", produces = "application/json")
     public ResponseEntity<Map<String, Object>> generateTrackList(@CookieValue("accessToken") String accessToken,
                                                                  @RequestParam List<String> chosenGenres,
-                                                                 @RequestParam String username) {
-        // Get user by username
-        User user = userService.getUserByUsername(username);
+                                                                 @RequestParam Long userId) {
+        logger.info("Received request to generate track list for user ID: " + userId);
+
+        User user = userService.getUserById(userId);
         if (user == null) {
+            logger.severe("User not found: " + userId);
             return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
         }
 
-        // Fetch blocked artists and songs from the database
         Map<String, List<String>> blockedList = getBlockedList(user);
 
-        // Generate recommendations from Spotify API
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        Map<String, Object> trackRecommendations = getRecommendations(chosenGenres, entity);
+        Map<String, Object> trackRecommendations;
+        try {
+            trackRecommendations = getRecommendations(chosenGenres, entity);
+            if (trackRecommendations == null || !trackRecommendations.containsKey("tracks")) {
+                logger.severe("No recommendations found from Spotify API.");
+                return ResponseEntity.status(502).body(Map.of("error", "No recommendations found from Spotify API."));
+            }
+        } catch (RestClientException e) {
+            logger.severe("Failed to fetch recommendations from Spotify: " + e.getMessage());
+            return ResponseEntity.status(502).body(Map.of("error", "Failed to fetch recommendations from Spotify"));
+        }
 
-        // Filter out blocked artists and songs
         filterRecommendations(trackRecommendations, blockedList);
 
         return ResponseEntity.ok(trackRecommendations);
     }
 
-    // Fetch blocked artists and songs from the database
     private Map<String, List<String>> getBlockedList(User user) {
         List<String> blockedArtists = userService.getBlockedArtists(user).stream()
                 .map(BlockedArtist::getName)
@@ -69,22 +81,21 @@ public class PlaylistExportController {
         return blockedList;
     }
 
-    // Method to fetch recommendations from Spotify API
     private Map<String, Object> getRecommendations(List<String> chosenGenres, HttpEntity<String> entity) {
-        // Build the Spotify API request URL with chosen genres
         String url = buildSpotifyRecommendationUrl(chosenGenres);
 
-        // Fetch recommendations from Spotify API
-        return restTemplate.getForObject(url, Map.class, entity);
+        logger.info("Fetching recommendations from Spotify API: " + url);
+        ResponseEntity<Map> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+        logger.info("Spotify API response status: " + responseEntity.getStatusCode());
+
+        return responseEntity.getBody();
     }
 
-    // Method to build the Spotify recommendation URL
     private String buildSpotifyRecommendationUrl(List<String> chosenGenres) {
         String genres = String.join(",", chosenGenres);
         return "https://api.spotify.com/v1/recommendations?seed_genres=" + genres;
     }
 
-    // Method to filter out blocked artists and songs
     private void filterRecommendations(Map<String, Object> recommendations, Map<String, List<String>> blockedList) {
         List<Map<String, Object>> tracks = (List<Map<String, Object>>) recommendations.get("tracks");
 

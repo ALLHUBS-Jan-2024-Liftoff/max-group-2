@@ -23,8 +23,53 @@ public class UserService {
     @Autowired
     private BlockedSongRepository blockedSongRepository;
 
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+    // User CRUD operations
+    public User createUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    public BlockedArtist createBlockedArtist(BlockedArtist blockedArtist) {
+        return blockedArtistRepository.save(blockedArtist);
+    }
+
+    public BlockedArtist getBlockedArtistById(Long id) {
+        return blockedArtistRepository.findById(id).orElse(null);
+    }
+
+    public BlockedArtist updateBlockedArtist(BlockedArtist blockedArtist) {
+        return blockedArtistRepository.save(blockedArtist);
+    }
+
+    public void deleteBlockedArtist(Long id) {
+        blockedArtistRepository.deleteById(id);
+    }
+
+    public BlockedSong createBlockedSong(BlockedSong blockedSong) {
+        return blockedSongRepository.save(blockedSong);
+    }
+
+    public BlockedSong getBlockedSongById(Long id) {
+        return blockedSongRepository.findById(id).orElse(null);
+    }
+
+    public BlockedSong updateBlockedSong(BlockedSong blockedSong) {
+        return blockedSongRepository.save(blockedSong);
+    }
+
+    public void deleteBlockedSong(Long id) {
+        blockedSongRepository.deleteById(id);
     }
 
     public List<BlockedArtist> getBlockedArtists(User user) {

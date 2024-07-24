@@ -12,9 +12,23 @@ public class BlockedArtist {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String name; // Assuming this is the field holding the artist's name
+    private String name;
 
-    // getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public String getName() {
         return name;
@@ -24,4 +38,3 @@ public class BlockedArtist {
         this.name = name;
     }
 }
-
