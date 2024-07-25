@@ -20,9 +20,10 @@ public class PlaylistController {
     @PostMapping
     public Map<String, Object> createPlaylist(@CookieValue("accessToken") String accessToken,
                                               @RequestParam List<String> chosenGenres) {
-
+        // Idea is to extract the userId from access token provided by Spotifyapi and use it to fetch user's history'
         String userId = "accessToken.getSubject()";
 
+        // Fetch user's history using the userId and populate the blockedList with their blocked tracks and artists'
         User user = userService.getUserHistory(userId);
 
         Map<String, List<Object>> blockedList = new HashMap<>();
@@ -33,7 +34,7 @@ public class PlaylistController {
 
         filterRecommendations(trackRecommendations, blockedList);
 
-        return null;
+        return trackRecommendations;
     }
     private void filterRecommendations(Map<String, Object> recommendations, Map<String, List<Object>> blockedList) {
         // Implement filtering based on user's blocked genres and artists

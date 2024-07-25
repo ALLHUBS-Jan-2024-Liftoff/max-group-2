@@ -4,7 +4,7 @@ package org.launchcode.threemix.domain;
 import jakarta.persistence.Entity;
 import lombok.Data;
 
-@Entity
+@Entity(name = "blocked_tracks")
 @Data
 public class BlockedTrack {
     private Integer trackId;

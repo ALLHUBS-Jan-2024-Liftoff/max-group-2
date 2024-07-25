@@ -3,7 +3,7 @@ package org.launchcode.threemix.domain;
 import jakarta.persistence.Entity;
 import lombok.Data;
 
-@Entity
+@Entity(name = "blocked_entities")
 @Data
 public class BlockedArtist {
 
