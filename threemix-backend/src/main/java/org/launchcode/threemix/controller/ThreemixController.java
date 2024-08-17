@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.launchcode.threemix.api.SpotifyApi;
 import org.launchcode.threemix.json.TokenResponse;
+import org.launchcode.threemix.model.User;
 import org.launchcode.threemix.secret.ClientConstants;
 import org.launchcode.threemix.service.StateService;
 import org.launchcode.threemix.service.UserService;
@@ -45,7 +46,7 @@ public class ThreemixController {
 
     @GetMapping(value = "/login")
     public RedirectView login(RedirectAttributes attributes, HttpSession session) {
-        // Generate a random state using StateController
+        // Generate a random state using StateService
         String state = stateService.generateState(session.getId());
 
         attributes.addAttribute("response_type", "code");
@@ -86,7 +87,12 @@ public class ThreemixController {
                         Cookie accessTokenCookie = new Cookie("accessToken", t.access_token());
                         accessTokenCookie.setSecure(true); // Ensure this is set to true in production
                         response.addCookie(accessTokenCookie);
+
+                        // Create or retrieve the user and log the login action
                         userService.createIfNewUser(t.access_token(), session);
+                        User user = userService.findUserBySpotifyId(userService.getUserId(t.access_token(), session));
+                        userService.logUserAction(user, "User Logged In");
+
                     },
                     () -> {
                         try {
@@ -117,9 +123,15 @@ public class ThreemixController {
 
     @PostMapping(value = "/logout")
     public void logout(HttpServletResponse response, HttpSession session) throws IOException {
+        String spotifyId = userService.getUserId(null, session);
+        User user = userService.findUserBySpotifyId(spotifyId);
+
         session.invalidate();
         Cookie accessTokenCookie = new Cookie("accessToken", "");
         accessTokenCookie.setSecure(true);
         response.addCookie(accessTokenCookie);
+
+        // Log the logout action
+        userService.logUserAction(user, "User Logged Out");
     }
 }

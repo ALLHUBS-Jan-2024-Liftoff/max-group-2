@@ -6,13 +6,16 @@ import org.launchcode.threemix.json.SpotifyUser;
 import org.launchcode.threemix.model.BlockedArtist;
 import org.launchcode.threemix.model.BlockedSong;
 import org.launchcode.threemix.model.User;
+import org.launchcode.threemix.model.UserHistory;
 import org.launchcode.threemix.repository.BlockedArtistRepository;
 import org.launchcode.threemix.repository.BlockedSongRepository;
+import org.launchcode.threemix.repository.UserHistoryRepository;
 import org.launchcode.threemix.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +29,9 @@ public class UserService {
 
     @Autowired
     private BlockedSongRepository blockedSongRepository;
+
+    @Autowired
+    private UserHistoryRepository userHistoryRepository;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -87,4 +93,16 @@ public class UserService {
         return user;
     }
 
+    // UserHistory related methods
+    public void logUserAction(User user, String action) {
+        UserHistory history = new UserHistory();
+        history.setUser(user);
+        history.setAction(action);
+        history.setTimestamp(LocalDateTime.now());
+        userHistoryRepository.save(history);
+    }
+
+    public List<UserHistory> getUserHistory(User user) {
+        return userHistoryRepository.findByUserId(user.getId());
+    }
 }

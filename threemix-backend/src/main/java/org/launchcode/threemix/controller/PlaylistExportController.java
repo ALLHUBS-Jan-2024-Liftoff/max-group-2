@@ -40,6 +40,9 @@ public class PlaylistExportController {
 
         filterRecommendations(trackRecommendations, blockedArtists, blockedSongs);
 
+        // Log the action in UserHistory
+        userService.logUserAction(user, "Generated Track List");
+
         return trackRecommendations;
     }
 
@@ -81,5 +84,8 @@ public class PlaylistExportController {
                 .toList();
         String playlistId = api.createPlaylist(spotifyId, name, description);
         api.addTracksToPlaylist(playlistId, trackUris);
+
+        // Log the action in UserHistory
+        userService.logUserAction(user, "Exported Playlist: " + name);
     }
 }

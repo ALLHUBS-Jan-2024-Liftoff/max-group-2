@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "user", indexes = @Index(name = "idx_spotify_id", columnList = "spotifyId", unique = true))
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String spotifyId;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -16,6 +18,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlockedSong> blockedSongs;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserHistory> userHistories;  // New: Add this line to reference UserHistory
 
     public User() {}
 
@@ -54,5 +59,13 @@ public class User {
 
     public void setBlockedSongs(List<BlockedSong> blockedSongs) {
         this.blockedSongs = blockedSongs;
+    }
+
+    public List<UserHistory> getUserHistories() {
+        return userHistories;
+    }
+
+    public void setUserHistories(List<UserHistory> userHistories) {
+        this.userHistories = userHistories;
     }
 }
