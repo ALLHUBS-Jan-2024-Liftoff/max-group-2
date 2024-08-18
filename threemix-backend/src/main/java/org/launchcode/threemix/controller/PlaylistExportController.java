@@ -38,7 +38,12 @@ public class PlaylistExportController {
         List<String> blockedSongs = userService.findBlockedSongsByUser(user)
                 .stream().map(BlockedSong::getSongId).toList();
 
-        filterRecommendations(trackRecommendations, blockedArtists, blockedSongs);
+        // Log genre usage
+        for (String genre : chosenGenres) {
+            userService.logUserAction(user, "Used Genre: " + genre);
+        }
+
+        filterRecommendations(trackRecommendations, blockedArtists, blockedSongs, user);
 
         // Log the action in UserHistory
         userService.logUserAction(user, "Generated Track List");
@@ -46,7 +51,7 @@ public class PlaylistExportController {
         return trackRecommendations;
     }
 
-    private void filterRecommendations(Map<String, Object> recommendations, List<String> blockedArtists, List<String> blockedSongs) {
+    private void filterRecommendations(Map<String, Object> recommendations, List<String> blockedArtists, List<String> blockedSongs, User user) {
         List<Map<String, Object>> tracks = (List<Map<String, Object>>) recommendations.get("tracks");
 
         List<Map<String, Object>> filteredTracks = tracks.stream()
@@ -60,6 +65,19 @@ public class PlaylistExportController {
                             .anyMatch(blockedArtists::contains);
 
                     boolean isBlockedSong = blockedSongs.contains(trackId);
+
+                    // Log the blocked artist or song
+                    if (isBlockedArtist) {
+                        artists.forEach(artist -> {
+                            if (blockedArtists.contains(artist.get("id"))) {
+                                userService.logUserAction(user, "Blocked Artist: " + artist.get("id"));
+                            }
+                        });
+                    }
+
+                    if (isBlockedSong) {
+                        userService.logUserAction(user, "Blocked Song: " + trackId);
+                    }
 
                     return !isBlockedArtist && !isBlockedSong;
                 })

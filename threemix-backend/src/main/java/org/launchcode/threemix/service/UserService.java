@@ -95,10 +95,7 @@ public class UserService {
 
     // UserHistory related methods
     public void logUserAction(User user, String action) {
-        UserHistory history = new UserHistory();
-        history.setUser(user);
-        history.setAction(action);
-        history.setTimestamp(LocalDateTime.now());
+        UserHistory history = new UserHistory(user, action, LocalDateTime.now());
         userHistoryRepository.save(history);
     }
 
